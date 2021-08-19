@@ -3,4 +3,4 @@ Game with chicken running around and laying eggs. Inspired by the "Happy Mrs Chi
 
 Game supports .tmx-map files created with Tiled.
 
-Default map (test.tmx) is made using tileset by LimeZu (https://limezu.itch.io/serenevillagerevamped)
+Default map (test.tmx) is made using tileset by LimeZu (https://limezu.itch.io/serenevillagerevamped) (CC BY 4.0)
