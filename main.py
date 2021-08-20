@@ -111,14 +111,14 @@ class Game:
 			self.kana.rect.center = self.kana.lastPos
 			self.kana.location = self.kana.lastPos
 		else:
-			self.kana.lastPos = self.kana.location
+			self.kana.lastPos = self.kana.rect.center
 		self.kanaSprite.draw(self.displaySurf)
 
 
 def printStatusLog():
 	loc = game.screenPosToTileCoords(game.kana.location)
 	print("TME:{0:15} POS:{1}x{2:6} FPS:{3:6} CPU:{4}%".format(
-			str(round(time.time() * 1000 - game.initTime)).ljust(1),
+			str(round(time.time() * 1000 - game.initTime)),
 			str(loc[0]),
 			str(loc[1]),
 			str(game.currentFps),
