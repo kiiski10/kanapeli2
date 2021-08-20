@@ -15,7 +15,8 @@ APP_PATH = os.path.dirname(os.path.realpath(__file__)) + os.sep
 class Game:
 	def __init__(self):
 		self.initTime = time.time() * 1000
-		self.fpsCounter = 0
+		self.currentFps = 0
+		self.lastRenderTime = time.time() * 1000
 		pygame.mixer.pre_init(44100, -16, 1, 1024)		# Shorten the buffer (last parameter) to reduce sound latency
 		pygame.mixer.init()
 		self.sounds = {}
@@ -120,23 +121,25 @@ def printStatusLog():
 			str(round(time.time() * 1000 - game.initTime)).ljust(1),
 			str(loc[0]),
 			str(loc[1]),
-			str(game.fpsCounter).ljust(5),
+			str(game.currentFps),
 			psutil.cpu_percent()
 		)
 	)
-	game.fpsCounter = 0
 
 def renderInOrder():
-	game.fpsCounter += 1
 	game.renderTiles(),
 	game.renderChicken(),
 	game.kana.update(),
 	pygame.display.flip()
+	renderedMsAgo = time.time() * 1000 - game.lastRenderTime
+	game.currentFps = round(1000 / renderedMsAgo)
+	game.lastRenderTime = time.time() * 1000
 
 game = Game()
 pygame.event.get()
 pygame.display.set_caption("Kanapeli II v{}".format(VERSION))
-RENDER_INTERVAL = 16.7
+RENDER_INTERVAL = 16.67 	# 60fps
+# RENDER_INTERVAL = 8.33 	# 120fps
 
 timedActions = [
 	(
