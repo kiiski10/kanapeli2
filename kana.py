@@ -13,23 +13,25 @@ class Kana(pygame.sprite.Sprite):
 		self.image = self.image_right
 		self.rect = self.image.get_rect()
 		self.rect.center = [posX, posY]
+		self.location = self.rect.center
 		self.targetPos = self.rect.center
-		self.lastPos = [posX, posY]
+		self.lastPos = self.rect.center
 
 	def update(self):
 		movement = pygame.math.Vector2()
-		f = pygame.math.Vector2(self.rect.center)
+		f = pygame.math.Vector2(self.location)
 		t = pygame.math.Vector2(self.targetPos)
 		rad = math.atan2(t.y - f.y, t.x - f.x)
 
 		distance = t.distance_to(f)
 		degrees = math.degrees(rad)
 
-		if distance > 3:
-			distance = 3
+		if distance > self.maxSpeed:
+			distance = self.maxSpeed
 
 		movement.from_polar((distance, degrees))
-		self.rect.center += movement
+		self.location += movement
+		self.rect.center = self.location
 
 		if degrees > 45 and degrees < 145:
 			self.image = self.image_down
