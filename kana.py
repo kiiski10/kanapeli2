@@ -4,6 +4,7 @@ APP_PATH = os.path.dirname(os.path.realpath(__file__))
 
 class Kana(pygame.sprite.Sprite):
 	def __init__(self, posX, posY):
+		self.state = "LOADING"
 		self.munat = []
 		pygame.sprite.Sprite.__init__(self)
 		self.image_up = pygame.image.load(os.path.join(APP_PATH, "img", "pienet", "kana-up.png"))
@@ -19,14 +20,18 @@ class Kana(pygame.sprite.Sprite):
 		self.maxSpeed = 1
 
 	def hitReaction(self):
-		print("im hit:", self.location, self.rect.center, self.coordsToDistAngle(self.rect.center))
-		self.targetPos = self.location
+		self.state = "BOUNCING"
+		angle = self.coordsToDistAngle(self.rect.center)[1]
+		movement = pygame.math.Vector2()
+		movement.from_polar((10, angle-195))
+		print("im hit:", self.location, self.rect.center, angle)
+		self.targetPos = movement + self.location
 
 	def move(self, distance, degrees, turnImage=True):
+
 		movement = pygame.math.Vector2()
 		if distance > self.maxSpeed:
 			distance = self.maxSpeed
-
 		movement.from_polar((distance, degrees))
 		self.location += movement
 		self.rect.center = self.location

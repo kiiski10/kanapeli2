@@ -125,10 +125,9 @@ class Game:
 
 	def moveChicken(self):
 		if self.kana.lastPos == self.kana.targetPos:
-			# print("AT TARGET")
-			pass
+			self.kana.state = "STANDING"
 		else:
-			# print("MOVING")
+			self.kana.state = "MOVING"
 			game.kana.update()
 
 		kanaTilePos = self.screenPosToTileCoords(self.kana.location)
@@ -153,9 +152,9 @@ def printStatusLog():
 	)
 
 def renderInOrder():
+	pygame.display.set_caption("Kanapeli II v{} State: {}".format(VERSION, game.kana.state))
 	if not game.moveChicken():
 		game.kana.hitReaction()
-	#game.kana.update()
 	game.renderLowTiles()
 	game.renderChicken()
 	game.renderHighTiles()
