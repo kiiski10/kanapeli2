@@ -8,6 +8,6 @@ class TimedAction:
 		self.lastTick = time.time() * 1000
 
 	def activate(self):
-		if time.time() * 1000 - self.lastTick > self.interval:
+		if time.time() * 1000 - self.lastTick >= self.interval:
 			self.lastTick = time.time() * 1000
 			self.action()

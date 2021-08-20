@@ -2,6 +2,8 @@ import pygame, random, time, os
 from pytmx import load_pygame
 from kana import Kana
 from timer import TimedAction
+import psutil
+
 """
 pip install pygame
 pip install pytmx
@@ -12,6 +14,8 @@ APP_PATH = os.path.dirname(os.path.realpath(__file__)) + os.sep
 
 class Game:
 	def __init__(self):
+		self.initTime = time.time() * 1000
+		self.fpsCounter = 0
 		pygame.mixer.pre_init(44100, -16, 1, 1024)		# Shorten the buffer (last parameter) to reduce sound latency
 		pygame.mixer.init()
 		self.sounds = {}
@@ -38,7 +42,6 @@ class Game:
 		# pygame.mouse.set_visible(False)
 		self.displaySurf = pygame.display.set_mode(self.windowSize, pygame.HWSURFACE | pygame.DOUBLEBUF)# | pygame.FULLSCREEN)
 		self.tileMap = load_pygame(os.path.join(APP_PATH, "maps", "testi.tmx"))
-
 		self.sprites = pygame.sprite.Group()
 		self.kanaSprite = pygame.sprite.Group()
 		self.kanaSprite.add(self.kana)
@@ -111,7 +114,20 @@ class Game:
 		self.kanaSprite.draw(self.displaySurf)
 
 
+def printStatusLog():
+	loc = game.screenPosToTileCoords(game.kana.location)
+	print("TME:{0:15} POS:{1}x{2:6} FPS:{3:6} CPU:{4}%".format(
+			str(round(time.time() * 1000 - game.initTime)).ljust(1),
+			str(loc[0]),
+			str(loc[1]),
+			str(game.fpsCounter).ljust(5),
+			psutil.cpu_percent()
+		)
+	)
+	game.fpsCounter = 0
+
 def renderInOrder():
+	game.fpsCounter += 1
 	game.renderTiles(),
 	game.renderChicken(),
 	game.kana.update(),
@@ -120,20 +136,28 @@ def renderInOrder():
 game = Game()
 pygame.event.get()
 pygame.display.set_caption("Kanapeli II v{}".format(VERSION))
+RENDER_INTERVAL = 15
 
 timedActions = [
 	(
 		TimedAction(
 			"handle events",
-			6,
+			RENDER_INTERVAL,
 			game.handleEvents,
 		)
 	),
 	(
 		TimedAction(
 			"render & flip",
-			6,
+			RENDER_INTERVAL,
 			renderInOrder,
+		)
+	),
+	(
+		TimedAction(
+			"console log",
+			1000,
+			printStatusLog,
 		)
 	)
 ]
