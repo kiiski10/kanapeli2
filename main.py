@@ -136,7 +136,7 @@ def renderInOrder():
 game = Game()
 pygame.event.get()
 pygame.display.set_caption("Kanapeli II v{}".format(VERSION))
-RENDER_INTERVAL = 15
+RENDER_INTERVAL = 16.7
 
 timedActions = [
 	(
@@ -156,7 +156,7 @@ timedActions = [
 	(
 		TimedAction(
 			"console log",
-			1000,
+			1000, 			# use only 1000ms for fps counter to work
 			printStatusLog,
 		)
 	)
