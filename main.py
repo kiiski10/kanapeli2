@@ -1,7 +1,7 @@
 import pygame, random, time, os
 from pytmx import load_pygame
 from kana import Kana
-
+from timer import TimedAction
 """
 pip install pygame
 pip install pytmx
@@ -70,7 +70,8 @@ class Game:
 			int((pos[1] + self.kana.rect.center[1]) / self.tileMap.tileheight)
 		)
 
-	def handleEvents(self, events):
+	def handleEvents(self):
+		events = pygame.event.get()
 		for event in events:
 			if event.type == 256:				# Window close
 				game.running = False
@@ -100,8 +101,7 @@ class Game:
 			else:
 				print("Unhandled event type:", event)
 
-	def render(self):
-		self.renderTiles()
+	def renderChicken(self):
 		kanaTilePos = self.screenPosToTileCoords(self.kana.rect.center)
 		if kanaTilePos in self.blockingTiles:
 			self.kana.rect.center = self.kana.lastPos
@@ -110,16 +110,36 @@ class Game:
 		self.kanaSprite.draw(self.displaySurf)
 
 
+def renderInOrder():
+	game.renderTiles(),
+	game.renderChicken(),
+	game.kana.update(),
+	pygame.display.flip()
+
 game = Game()
 pygame.event.get()
 pygame.display.set_caption("Kanapeli II v{}".format(VERSION))
 
+timedActions = [
+	(
+		TimedAction(
+			"handle events",
+			6,
+			game.handleEvents,
+		)
+	),
+	(
+		TimedAction(
+			"render & flip",
+			6,
+			renderInOrder,
+		)
+	)
+]
+
 while game.running:
-	time.sleep(0.025)
-	pygame.display.flip()
-	game.handleEvents(pygame.event.get())
-	game.kana.update()
-	game.render()
+	for a in timedActions:
+		a.activate()
 
 pygame.quit()
 print("QUIT BYE")

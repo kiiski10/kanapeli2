@@ -16,6 +16,7 @@ class Kana(pygame.sprite.Sprite):
 		self.location = self.rect.center
 		self.targetPos = self.rect.center
 		self.lastPos = self.rect.center
+		self.maxSpeed = 1
 
 	def update(self):
 		movement = pygame.math.Vector2()
