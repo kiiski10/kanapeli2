@@ -105,6 +105,7 @@ class Game:
 		kanaTilePos = self.screenPosToTileCoords(self.kana.rect.center)
 		if kanaTilePos in self.blockingTiles:
 			self.kana.rect.center = self.kana.lastPos
+			self.kana.location = self.kana.lastPos
 		else:
 			self.kana.lastPos = self.kana.rect.center
 		self.kanaSprite.draw(self.displaySurf)
