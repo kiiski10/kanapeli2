@@ -1,8 +1,8 @@
 import pygame, random, time, os
 from pytmx import load_pygame
+import psutil
 from kana import Kana
 from timer import TimedAction
-import psutil
 
 """
 pip install pygame
@@ -55,9 +55,23 @@ class Game:
 				blockingTiles.append((x, y))
 		return blockingTiles
 
-	def renderTiles(self):
+	def renderLowTiles(self):
+		drawSeparately = ["korkeat", "esteet"]
 		for layer in self.tileMap.visible_layers:
-			for x, y, gid, in layer:
+			if layer.name not in drawSeparately:
+				for x, y, gid, in layer:
+					tile = self.tileMap.get_tile_image_by_gid(gid)
+					if tile:
+						self.displaySurf.blit(
+							tile,
+							(
+								x * self.tileMap.tilewidth - self.kana.location[0],
+								y * self.tileMap.tileheight - self.kana.location[1]
+							)
+						)
+
+	def renderHighTiles(self):
+			for x, y, gid, in self.tileMap.get_layer_by_name("korkeat"):
 				tile = self.tileMap.get_tile_image_by_gid(gid)
 				if tile:
 					self.displaySurf.blit(
@@ -93,11 +107,12 @@ class Game:
 				# print("KEY UP", key)
 
 			elif event.type == 1024:			# Mouse move
-				# print("MOUSE MOVE:", event.pos, event.rel, event.buttons)
-				self.kana.targetPos = event.pos
+				# self.kana.targetPos = event.pos
+				pass
 
 			elif event.type == 1025:			# Mouse button down
-				print("CLICK:", self.screenPosToTileCoords(event.pos))
+				# print("CLICK:", self.screenPosToTileCoords(event.pos))
+				self.kana.targetPos = event.pos
 
 			elif event.type == 1026:			# Mouse button up
 				pass
@@ -106,13 +121,24 @@ class Game:
 				print("Unhandled event type:", event)
 
 	def renderChicken(self):
+		self.kanaSprite.draw(self.displaySurf)
+
+	def moveChicken(self):
+		if self.kana.lastPos == self.kana.targetPos:
+			# print("AT TARGET")
+			pass
+		else:
+			# print("MOVING")
+			game.kana.update()
+
 		kanaTilePos = self.screenPosToTileCoords(self.kana.location)
 		if kanaTilePos in self.blockingTiles:
-			self.kana.rect.center = self.kana.lastPos
 			self.kana.location = self.kana.lastPos
+			return False
 		else:
 			self.kana.lastPos = self.kana.rect.center
-		self.kanaSprite.draw(self.displaySurf)
+			return True
+
 
 
 def printStatusLog():
@@ -127,9 +153,12 @@ def printStatusLog():
 	)
 
 def renderInOrder():
-	game.renderTiles(),
-	game.renderChicken(),
-	game.kana.update(),
+	if not game.moveChicken():
+		game.kana.hitReaction()
+	#game.kana.update()
+	game.renderLowTiles()
+	game.renderChicken()
+	game.renderHighTiles()
 	pygame.display.flip()
 	renderedMsAgo = time.time() * 1000 - game.lastRenderTime
 	game.currentFps = round(1000 / renderedMsAgo)
@@ -159,7 +188,7 @@ timedActions = [
 	(
 		TimedAction(
 			"console log",
-			1000, 			# use only 1000ms for fps counter to work
+			1000,
 			printStatusLog,
 		)
 	)

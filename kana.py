@@ -18,15 +18,12 @@ class Kana(pygame.sprite.Sprite):
 		self.lastPos = self.rect.center
 		self.maxSpeed = 1
 
-	def update(self):
+	def hitReaction(self):
+		print("im hit:", self.location, self.rect.center, self.coordsToDistAngle(self.rect.center))
+		self.targetPos = self.location
+
+	def move(self, distance, degrees, turnImage=True):
 		movement = pygame.math.Vector2()
-		f = pygame.math.Vector2(self.location)
-		t = pygame.math.Vector2(self.targetPos)
-		rad = math.atan2(t.y - f.y, t.x - f.x)
-
-		distance = t.distance_to(f)
-		degrees = math.degrees(rad)
-
 		if distance > self.maxSpeed:
 			distance = self.maxSpeed
 
@@ -34,16 +31,24 @@ class Kana(pygame.sprite.Sprite):
 		self.location += movement
 		self.rect.center = self.location
 
-		if degrees > 45 and degrees < 145:
-			self.image = self.image_down
+		if turnImage:
+			if degrees > 45 and degrees < 145:
+				self.image = self.image_down
+			elif degrees > -145 and degrees < -45:
+				self.image = self.image_up
+			elif degrees > -45 and degrees < 45:
+				self.image = self.image_right
+			elif degrees > 145 or degrees < -145:
+				self.image = self.image_left
 
-		elif degrees > -145 and degrees < -45:
-			self.image = self.image_up
+	def coordsToDistAngle(self, target):
+		f = pygame.math.Vector2(self.location)
+		t = pygame.math.Vector2(target)
+		rad = math.atan2(t.y - f.y, t.x - f.x)
+		distance = t.distance_to(f)
+		degrees = math.degrees(rad)
+		return(distance, degrees)
 
-		elif degrees > -45 and degrees < 45:
-			self.image = self.image_right
-
-		elif degrees > 145 or degrees < -145:
-			self.image = self.image_left
-
-		# print(degrees)
+	def update(self):
+		distance, degrees = self.coordsToDistAngle(self.targetPos)
+		self.move(distance, degrees)
