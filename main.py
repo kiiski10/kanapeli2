@@ -9,7 +9,7 @@ pip install pygame
 pip install pytmx
 """
 
-VERSION = "0.1"
+VERSION = "0.2"
 APP_PATH = os.path.dirname(os.path.realpath(__file__)) + os.sep
 
 class Game:
@@ -62,15 +62,15 @@ class Game:
 					self.displaySurf.blit(
 						tile,
 						(
-							x * self.tileMap.tilewidth - self.kana.rect.center[0],
-							y * self.tileMap.tileheight - self.kana.rect.center[1]
+							x * self.tileMap.tilewidth - self.kana.location[0],
+							y * self.tileMap.tileheight - self.kana.location[1]
 						)
 					)
 
 	def screenPosToTileCoords(self, pos):
 		return(
-			int((pos[0] + self.kana.rect.center[0]) / self.tileMap.tilewidth),
-			int((pos[1] + self.kana.rect.center[1]) / self.tileMap.tileheight)
+			int((pos[0] + self.kana.location[0]) / self.tileMap.tilewidth),
+			int((pos[1] + self.kana.location[1]) / self.tileMap.tileheight)
 		)
 
 	def handleEvents(self):
@@ -105,12 +105,12 @@ class Game:
 				print("Unhandled event type:", event)
 
 	def renderChicken(self):
-		kanaTilePos = self.screenPosToTileCoords(self.kana.rect.center)
+		kanaTilePos = self.screenPosToTileCoords(self.kana.location)
 		if kanaTilePos in self.blockingTiles:
 			self.kana.rect.center = self.kana.lastPos
 			self.kana.location = self.kana.lastPos
 		else:
-			self.kana.lastPos = self.kana.rect.center
+			self.kana.lastPos = self.kana.location
 		self.kanaSprite.draw(self.displaySurf)
 
 
