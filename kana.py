@@ -23,11 +23,10 @@ class Kana(pygame.sprite.Sprite):
 		self.state = "BOUNCING"
 		angle = self.coordsToDistAngle(self.rect.center)[1]
 		movement = pygame.math.Vector2()
-		movement.from_polar((10, angle-195))
+		movement.from_polar((10, angle - 195))
 		movement.x = int(movement.x)
 		movement.y = int(movement.y)
 		self.targetPos = movement + self.location
-		print("TARGET:", self.targetPos)
 
 	def move(self, distance, degrees):
 		movement = pygame.math.Vector2()

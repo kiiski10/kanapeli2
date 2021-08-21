@@ -112,7 +112,6 @@ class Game:
 
 			elif event.type == 1025:			# Mouse button down
 				# print("CLICK:", self.screenPosToTileCoords(event.pos))
-				print(event.pos)
 				self.kana.targetPos = event.pos
 				self.kana.state = "MOVING"
 
@@ -129,9 +128,13 @@ class Game:
 		if self.kana.lastPos == self.kana.targetPos:
 			self.kana.state = "STANDING"
 		else:
-			game.kana.update()
+			self.kana.update()
+			if  self.kana.image == self.kana.image_up:
+				kanaTilePos = self.screenPosToTileCoords((self.kana.location[0], self.kana.location[1]))
+			else:
+				kanaTilePos = self.screenPosToTileCoords((self.kana.location[0], self.kana.location[1] - 24))
 
-			kanaTilePos = self.screenPosToTileCoords(self.kana.location)
+
 			if kanaTilePos in self.blockingTiles:
 				self.kana.location = self.kana.lastPos
 				self.kana.state = "BLOCKED"
