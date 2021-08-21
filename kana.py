@@ -17,26 +17,32 @@ class Kana(pygame.sprite.Sprite):
 		self.location = self.rect.center
 		self.targetPos = self.rect.center
 		self.lastPos = self.rect.center
-		self.maxSpeed = 1
+		self.maxSpeed = 2
 
 	def hitReaction(self):
 		self.state = "BOUNCING"
 		angle = self.coordsToDistAngle(self.rect.center)[1]
 		movement = pygame.math.Vector2()
 		movement.from_polar((10, angle-195))
-		print("im hit:", self.location, self.rect.center, angle)
+		movement.x = int(movement.x)
+		movement.y = int(movement.y)
 		self.targetPos = movement + self.location
+		print("TARGET:", self.targetPos)
 
-	def move(self, distance, degrees, turnImage=True):
-
+	def move(self, distance, degrees):
 		movement = pygame.math.Vector2()
-		if distance > self.maxSpeed:
-			distance = self.maxSpeed
+		if self.state == "BOUNCING":
+			if distance > self.maxSpeed * 3:
+				distance = self.maxSpeed * 3
+		else:
+			if distance > self.maxSpeed:
+				distance = self.maxSpeed
+
 		movement.from_polar((distance, degrees))
 		self.location += movement
 		self.rect.center = self.location
 
-		if turnImage:
+		if self.state == "MOVING":
 			if degrees > 45 and degrees < 145:
 				self.image = self.image_down
 			elif degrees > -145 and degrees < -45:

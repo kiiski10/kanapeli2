@@ -112,7 +112,9 @@ class Game:
 
 			elif event.type == 1025:			# Mouse button down
 				# print("CLICK:", self.screenPosToTileCoords(event.pos))
+				print(event.pos)
 				self.kana.targetPos = event.pos
+				self.kana.state = "MOVING"
 
 			elif event.type == 1026:			# Mouse button up
 				pass
@@ -127,17 +129,14 @@ class Game:
 		if self.kana.lastPos == self.kana.targetPos:
 			self.kana.state = "STANDING"
 		else:
-			self.kana.state = "MOVING"
 			game.kana.update()
 
-		kanaTilePos = self.screenPosToTileCoords(self.kana.location)
-		if kanaTilePos in self.blockingTiles:
-			self.kana.location = self.kana.lastPos
-			return False
-		else:
-			self.kana.lastPos = self.kana.rect.center
-			return True
-
+			kanaTilePos = self.screenPosToTileCoords(self.kana.location)
+			if kanaTilePos in self.blockingTiles:
+				self.kana.location = self.kana.lastPos
+				self.kana.state = "BLOCKED"
+			else:
+				self.kana.lastPos = self.kana.rect.center
 
 
 def printStatusLog():
@@ -153,7 +152,8 @@ def printStatusLog():
 
 def renderInOrder():
 	pygame.display.set_caption("Kanapeli II v{} State: {}".format(VERSION, game.kana.state))
-	if not game.moveChicken():
+	game.moveChicken()
+	if game.kana.state == "BLOCKED":
 		game.kana.hitReaction()
 	game.renderLowTiles()
 	game.renderChicken()
@@ -166,7 +166,8 @@ def renderInOrder():
 game = Game()
 pygame.event.get()
 pygame.display.set_caption("Kanapeli II v{}".format(VERSION))
-RENDER_INTERVAL = 16.67 	# 60fps
+RENDER_INTERVAL = 33.34 	# 30fps
+#RENDER_INTERVAL = 16.67 	# 60fps
 # RENDER_INTERVAL = 8.33 	# 120fps
 
 timedActions = [
