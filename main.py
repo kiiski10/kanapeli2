@@ -3,6 +3,7 @@ from pytmx import load_pygame
 import psutil
 from kana import Kana
 from timer import TimedAction
+from core import screenPosToTilePos, tilePosToScreenPos
 
 """
 pip install pygame
@@ -35,14 +36,15 @@ class Game:
 		self.clock = pygame.time.Clock()
 		self.running = True
 		self.windowSize = [1280, 720]
-		self.kana = Kana(
-			self.windowSize[0] / 2 + 30,
-			self.windowSize[1] / 2
-		)
 		# pygame.event.set_grab(True)
 		# pygame.mouse.set_visible(False)
 		self.displaySurf = pygame.display.set_mode(self.windowSize, pygame.HWSURFACE | pygame.DOUBLEBUF)# | pygame.FULLSCREEN)
 		self.tileMap = load_pygame(os.path.join(APP_PATH, "maps", "chicken2.tmx"))
+		self.kana = Kana(
+			self.windowSize[0] / 2 + 30,
+			self.windowSize[1] / 2,
+			self.tileMap,
+		)
 		self.sprites = pygame.sprite.Group()
 		self.kanaSprite = pygame.sprite.Group()
 		self.kanaSprite.add(self.kana)
@@ -82,18 +84,6 @@ class Game:
 						)
 					)
 
-	def screenPosToTilePos(self, pos):
-		return(
-			(pos[0] + self.kana.location[0]) // self.tileMap.tilewidth,
-			(pos[1] + self.kana.location[1]) // self.tileMap.tileheight
-		)
-
-	def tilePosToScreenPos(self, coords):
-		x = coords[0] * self.tileMap.tilewidth - self.kana.location[0]
-		y = coords[1] * self.tileMap.tileheight - self.kana.location[1]
-		#print("TILE POS -> SCREEN POS:", coords, "->", x,y)
-		return(x, y)
-
 	def handleEvents(self):
 		events = pygame.event.get()
 		for event in events:
@@ -113,13 +103,11 @@ class Game:
 				# print("KEY UP", key)
 
 			elif event.type == 1024:			# Mouse move
-				tilepos = self.screenPosToTilePos(event.pos)
-				self.tilePosToScreenPos(tilepos)
-
+				tilepos = screenPosToTilePos(self.kana, self.tileMap, event.pos)
 
 			elif event.type == 1025:			# Mouse button down
-				# print("CLICK:", self.screenPosToTilePos(event.pos))
-				self.kana.targetPos = event.pos
+				# print("CLICK:", screenPosToTilePos(event.pos))
+				self.kana.targetTile = screenPosToTilePos(self.kana, self.tileMap, event.pos)
 				self.kana.state = "MOVING"
 
 			elif event.type == 1026:			# Mouse button up
@@ -130,17 +118,20 @@ class Game:
 
 	def renderChicken(self):
 		self.kanaSprite.draw(self.displaySurf)
+		# Draw line from kana to target
+		pygame.draw.line(self.displaySurf, (130,25,120), self.kana.location, tilePosToScreenPos(self.kana, self.tileMap, self.kana.targetTile))
+		# Draw circle around target
+		pygame.draw.circle(self.displaySurf, (120,130,25), self.kana.location, 24, 1)
 
 	def moveChicken(self):
-		if self.kana.lastPos == self.kana.targetPos:
+		if screenPosToTilePos(self.kana, self.tileMap, self.kana.lastPos) == self.kana.targetTile:
 			self.kana.state = "STANDING"
 		else:
 			self.kana.update()
 			if  self.kana.image == self.kana.image_up:
-				kanaTilePos = self.screenPosToTilePos((self.kana.location[0], self.kana.location[1]))
+				kanaTilePos = screenPosToTilePos(self.kana, self.tileMap, self.kana.location)
 			else:
-				kanaTilePos = self.screenPosToTilePos((self.kana.location[0], self.kana.location[1] - 24))
-
+				kanaTilePos = screenPosToTilePos(self.kana, self.tileMap, (self.kana.location[0], self.kana.location[1] - 24))
 
 			if kanaTilePos in self.blockingTiles:
 				self.kana.location = self.kana.lastPos
@@ -150,7 +141,7 @@ class Game:
 
 
 def printStatusLog():
-	loc = game.screenPosToTilePos(game.kana.location)
+	loc = screenPosToTilePos(game.kana, game.tileMap, game.kana.location)
 	print("TME:{0:15} POS:{1}x{2:6} FPS:{3:6} CPU:{4}%".format(
 			str(round(time.time() * 1000 - game.initTime)),
 			str(loc[0]),
@@ -168,6 +159,14 @@ def renderInOrder():
 	game.renderLowTiles()
 	game.renderChicken()
 	game.renderHighTiles()
+
+	pygame.draw.line(
+		game.displaySurf,
+		(130,25,120),
+		game.kana.location,
+		tilePosToScreenPos(game.kana, game.tileMap, screenPosToTilePos(game.kana, game.tileMap, pygame.mouse.get_pos()))
+	)
+
 	pygame.display.flip()
 	renderedMsAgo = time.time() * 1000 - game.lastRenderTime
 	game.currentFps = round(1000 / renderedMsAgo)

@@ -1,11 +1,13 @@
 import pygame, os, math
+from core import screenPosToTilePos, tilePosToScreenPos
 
 APP_PATH = os.path.dirname(os.path.realpath(__file__))
 
 class Kana(pygame.sprite.Sprite):
-	def __init__(self, posX, posY):
+	def __init__(self, posX, posY, tileMap):
 		self.state = "LOADING"
 		self.munat = []
+		self.world = tileMap
 		pygame.sprite.Sprite.__init__(self)
 		self.image_up = pygame.image.load(os.path.join(APP_PATH, "img", "pienet", "kana-up.png"))
 		self.image_down = pygame.image.load(os.path.join(APP_PATH, "img", "pienet", "kana-down.png"))
@@ -15,7 +17,7 @@ class Kana(pygame.sprite.Sprite):
 		self.rect = self.image.get_rect()
 		self.rect.center = [posX, posY]
 		self.location = self.rect.center
-		self.targetPos = self.rect.center
+		self.targetTile = screenPosToTilePos(self, self.world, self.rect.center)
 		self.lastPos = self.rect.center
 		self.maxSpeed = 2
 
@@ -60,5 +62,5 @@ class Kana(pygame.sprite.Sprite):
 		return(distance, degrees)
 
 	def update(self):
-		distance, degrees = self.coordsToDistAngle(self.targetPos)
+		distance, degrees = self.coordsToDistAngle(tilePosToScreenPos(self, self.world, self.targetTile))
 		self.move(distance, degrees)
