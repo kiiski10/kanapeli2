@@ -42,7 +42,7 @@ class Game:
 		# pygame.event.set_grab(True)
 		# pygame.mouse.set_visible(False)
 		self.displaySurf = pygame.display.set_mode(self.windowSize, pygame.HWSURFACE | pygame.DOUBLEBUF)# | pygame.FULLSCREEN)
-		self.tileMap = load_pygame(os.path.join(APP_PATH, "maps", "testi.tmx"))
+		self.tileMap = load_pygame(os.path.join(APP_PATH, "maps", "chicken2.tmx"))
 		self.sprites = pygame.sprite.Group()
 		self.kanaSprite = pygame.sprite.Group()
 		self.kanaSprite.add(self.kana)
