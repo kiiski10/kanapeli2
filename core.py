@@ -2,8 +2,8 @@ import math
 
 def screenPosToTilePos(kana, tileMap, pos):
     return(
-        (pos[0] + kana.location[0] + tileMap.tilewidth / 2) // tileMap.tilewidth,
-        (pos[1] + kana.location[1] + tileMap.tilewidth / 2) // tileMap.tileheight
+        (pos[0] + kana.location[0] + tileMap.tilewidth) // tileMap.tilewidth,
+        (pos[1] + kana.location[1] + tileMap.tilewidth) // tileMap.tileheight
     )
 
 def tilePosToScreenPos(kana, tileMap, pos):
