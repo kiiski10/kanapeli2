@@ -17,7 +17,8 @@ class Kana(pygame.sprite.Sprite):
 		self.rect = self.image.get_rect()
 		self.rect.center = [posX, posY]
 		self.location = self.rect.center
-		self.targetTile = screenPosToTilePos(self, self.world, self.rect.center)
+		self.targetTile = None
+		self.targetQue = []
 		self.lastPos = self.rect.center
 		self.maxSpeed = 2
 

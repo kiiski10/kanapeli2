@@ -100,14 +100,13 @@ class Game:
 
 			elif event.type == 769:				# Key up
 				key = event.unicode
-				# print("KEY UP", key)
 
 			elif event.type == 1024:			# Mouse move
 				tilepos = screenPosToTilePos(self.kana, self.tileMap, event.pos)
 
 			elif event.type == 1025:			# Mouse button down
-				# print("CLICK:", screenPosToTilePos(event.pos))
-				self.kana.targetTile = screenPosToTilePos(self.kana, self.tileMap, event.pos)
+				targettile = screenPosToTilePos(self.kana, self.tileMap, event.pos)
+				self.kana.targetQue.append(targettile)
 				self.kana.state = "MOVING"
 
 			elif event.type == 1026:			# Mouse button up
@@ -118,36 +117,72 @@ class Game:
 
 	def renderChicken(self):
 		self.kanaSprite.draw(self.displaySurf)
-		# Draw line from kana to target
-		pygame.draw.line(self.displaySurf, (130,25,120), self.kana.location, tilePosToScreenPos(self.kana, self.tileMap, self.kana.targetTile))
-		# Draw circle around target
-		pygame.draw.circle(self.displaySurf, (120,130,25), self.kana.location, 24, 1)
+
+		if self.kana.targetTile: 	# Draw line from chicken to target
+			pygame.draw.line(
+				self.displaySurf,
+				(130,25,120),
+				self.kana.location,
+				tilePosToScreenPos(self.kana, self.tileMap, self.kana.targetTile)
+			)
+
+	def renderPath(self):
+		last_p = None
+		for p in self.kana.targetQue:
+			if last_p:
+				pygame.draw.line(
+					game.displaySurf,
+					(130,25,120),
+					tilePosToScreenPos(self.kana, self.tileMap, last_p),
+					tilePosToScreenPos(self.kana, self.tileMap, p)
+				)
+			else:
+				pygame.draw.line(
+					game.displaySurf,
+					(130,25,120),
+					tilePosToScreenPos(self.kana, self.tileMap, self.kana.targetTile),
+					tilePosToScreenPos(self.kana, self.tileMap, p)
+				)
+			last_p = p
 
 	def moveChicken(self):
-		if distance(self.kana.lastPos, tilePosToScreenPos(self.kana, self.tileMap, self.kana.targetTile)) < 20:
-			self.kana.state = "STANDING"
-		else:
-			self.kana.update()
-			if  self.kana.image == self.kana.image_up:
-				kanaTilePos = screenPosToTilePos(self.kana, self.tileMap, self.kana.location)
+		if self.kana.targetTile:
+			if distance(self.kana.lastPos, tilePosToScreenPos(self.kana, self.tileMap, self.kana.targetTile)) < 20:
+				self.kana.targetQue = self.kana.targetQue[1:]
+				if len(self.kana.targetQue) > 0:
+					self.kana.targetTile = self.kana.targetQue[0]
+				else:
+					self.kana.state = "WAITING"
+					self.kana.targetTile = None
 			else:
-				kanaTilePos = screenPosToTilePos(self.kana, self.tileMap, (self.kana.location[0], self.kana.location[1] - 24))
+				self.kana.update()
+				if  self.kana.image == self.kana.image_up:
+					kanaTilePos = screenPosToTilePos(self.kana, self.tileMap, self.kana.location)
+				else:
+					kanaTilePos = screenPosToTilePos(self.kana, self.tileMap, (self.kana.location[0], self.kana.location[1] - 24))
 
-			if kanaTilePos in self.blockingTiles:
-				self.kana.location = self.kana.lastPos
-				self.kana.state = "BLOCKED"
+				if kanaTilePos in self.blockingTiles:
+					self.kana.location = self.kana.lastPos
+					self.kana.state = "BLOCKED"
+				else:
+					self.kana.lastPos = self.kana.rect.center
+		else:
+			if len(self.kana.targetQue) > 0:
+				self.kana.targetTile = self.kana.targetQue[0]
 			else:
-				self.kana.lastPos = self.kana.rect.center
+				self.kana.state = "WAITING"
+
 
 
 def printStatusLog():
 	loc = screenPosToTilePos(game.kana, game.tileMap, game.kana.location)
-	print("TME:{0:15} POS:{1}x{2:6} FPS:{3:6} CPU:{4}%".format(
+	print("TME:{0:15} POS:{1}x{2:6} FPS:{3:6} CPU:{4}% LEN:{5}".format(
 			str(round(time.time() * 1000 - game.initTime)),
 			str(loc[0]),
 			str(loc[1]),
 			str(game.currentFps),
-			psutil.cpu_percent()
+			psutil.cpu_percent(),
+			str(len(game.kana.targetQue))
 		)
 	)
 
@@ -159,14 +194,7 @@ def renderInOrder():
 	game.renderLowTiles()
 	game.renderChicken()
 	game.renderHighTiles()
-
-	pygame.draw.line(
-		game.displaySurf,
-		(130,25,120),
-		game.kana.location,
-		tilePosToScreenPos(game.kana, game.tileMap, screenPosToTilePos(game.kana, game.tileMap, pygame.mouse.get_pos()))
-	)
-
+	game.renderPath()
 	pygame.display.flip()
 	renderedMsAgo = time.time() * 1000 - game.lastRenderTime
 	game.currentFps = round(1000 / renderedMsAgo)
