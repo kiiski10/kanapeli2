@@ -3,7 +3,7 @@ from pytmx import load_pygame
 import psutil
 from kana import Kana
 from timer import TimedAction
-from core import screenPosToTilePos, tilePosToScreenPos
+from core import screenPosToTilePos, tilePosToScreenPos, distance
 
 """
 pip install pygame
@@ -124,7 +124,7 @@ class Game:
 		pygame.draw.circle(self.displaySurf, (120,130,25), self.kana.location, 24, 1)
 
 	def moveChicken(self):
-		if screenPosToTilePos(self.kana, self.tileMap, self.kana.lastPos) == self.kana.targetTile:
+		if distance(self.kana.lastPos, tilePosToScreenPos(self.kana, self.tileMap, self.kana.targetTile)) < 20:
 			self.kana.state = "STANDING"
 		else:
 			self.kana.update()

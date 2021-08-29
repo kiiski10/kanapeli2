@@ -1,3 +1,4 @@
+import math
 
 def screenPosToTilePos(kana, tileMap, pos):
     return(
@@ -6,7 +7,9 @@ def screenPosToTilePos(kana, tileMap, pos):
     )
 
 def tilePosToScreenPos(kana, tileMap, pos):
-    x = pos[0] * tileMap.tilewidth - kana.location[0]
-    y = pos[1] * tileMap.tileheight - kana.location[1]
-    #print("TILE POS -> SCREEN POS:", pos, "->", x,y)
+    x = (pos[0] * tileMap.tilewidth - kana.location[0]) - tileMap.tileheight / 2
+    y = (pos[1] * tileMap.tileheight - kana.location[1]) - tileMap.tileheight / 2
     return(x, y)
+
+def distance(start, end):
+    return math.sqrt((start[0] - end[0]) ** 2 + (start[1] - end[1]) ** 2)
