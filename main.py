@@ -82,11 +82,17 @@ class Game:
 						)
 					)
 
-	def screenPosToTileCoords(self, pos):
+	def screenPosToTilePos(self, pos):
 		return(
-			int((pos[0] + self.kana.location[0]) / self.tileMap.tilewidth),
-			int((pos[1] + self.kana.location[1]) / self.tileMap.tileheight)
+			(pos[0] + self.kana.location[0]) // self.tileMap.tilewidth,
+			(pos[1] + self.kana.location[1]) // self.tileMap.tileheight
 		)
+
+	def tilePosToScreenPos(self, coords):
+		x = coords[0] * self.tileMap.tilewidth - self.kana.location[0]
+		y = coords[1] * self.tileMap.tileheight - self.kana.location[1]
+		#print("TILE POS -> SCREEN POS:", coords, "->", x,y)
+		return(x, y)
 
 	def handleEvents(self):
 		events = pygame.event.get()
@@ -107,11 +113,12 @@ class Game:
 				# print("KEY UP", key)
 
 			elif event.type == 1024:			# Mouse move
-				# self.kana.targetPos = event.pos
-				pass
+				tilepos = self.screenPosToTilePos(event.pos)
+				self.tilePosToScreenPos(tilepos)
+
 
 			elif event.type == 1025:			# Mouse button down
-				# print("CLICK:", self.screenPosToTileCoords(event.pos))
+				# print("CLICK:", self.screenPosToTilePos(event.pos))
 				self.kana.targetPos = event.pos
 				self.kana.state = "MOVING"
 
@@ -130,9 +137,9 @@ class Game:
 		else:
 			self.kana.update()
 			if  self.kana.image == self.kana.image_up:
-				kanaTilePos = self.screenPosToTileCoords((self.kana.location[0], self.kana.location[1]))
+				kanaTilePos = self.screenPosToTilePos((self.kana.location[0], self.kana.location[1]))
 			else:
-				kanaTilePos = self.screenPosToTileCoords((self.kana.location[0], self.kana.location[1] - 24))
+				kanaTilePos = self.screenPosToTilePos((self.kana.location[0], self.kana.location[1] - 24))
 
 
 			if kanaTilePos in self.blockingTiles:
@@ -143,7 +150,7 @@ class Game:
 
 
 def printStatusLog():
-	loc = game.screenPosToTileCoords(game.kana.location)
+	loc = game.screenPosToTilePos(game.kana.location)
 	print("TME:{0:15} POS:{1}x{2:6} FPS:{3:6} CPU:{4}%".format(
 			str(round(time.time() * 1000 - game.initTime)),
 			str(loc[0]),
