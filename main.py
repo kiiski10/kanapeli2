@@ -204,7 +204,6 @@ class Game:
 
 
 def updateHUD():
-	game.hud.fields["FPS"].value = game.currentFps
 	game.hud.fields["FPS_LOCK"].value = game.fpsLock
 	game.hud.fields["PATH_LEN"].value = len(game.kana.targetQue)
 	game.hud.fields["FOOD"].value = 0
@@ -224,8 +223,13 @@ def printStatusLog():
 		)
 	)
 
-def renderInOrder():
+def updateHudFps():
+	game.hud.fields["FPS"].value = game.currentFps
+
+def updateWindowTitle():
 	pygame.display.set_caption("Kanapeli II v{} State: {}".format(VERSION, game.kana.state))
+
+def renderFrame():
 	game.moveChicken()
 	if game.kana.state == "BLOCKED":
 		game.kana.hitReaction()
@@ -234,7 +238,6 @@ def renderInOrder():
 	game.renderChicken()
 	game.renderHighTiles()
 	# game.renderPath()
-	updateHUD()
 	game.hud.render()
 	pygame.display.flip()
 	renderedMsAgo = time.time() * 1000 - game.lastRenderTime
@@ -246,6 +249,21 @@ pygame.event.get()
 pygame.display.set_caption("Kanapeli II v{}".format(VERSION))
 
 timedActions = {
+	"UPDATE_FPS":
+		TimedAction(
+			500,
+			updateHudFps,
+		),
+	"UPDATE_HUD":
+		TimedAction(
+			150,
+			updateHUD,
+		),
+	"UPDATE_WIN_TITLE":
+		TimedAction(
+			250,
+			updateWindowTitle,
+		),
 	# "CONSOLE_LOG":
 	# 	TimedAction(
 	# 		1000,
@@ -255,11 +273,11 @@ timedActions = {
 
 while game.running:
 	game.handleEvents()
-	renderInOrder()
 
 	for a in timedActions:
 		timedActions[a].activate()
 
+	renderFrame()
 	game.clock.tick(game.fpsLock)
 
 pygame.quit()
