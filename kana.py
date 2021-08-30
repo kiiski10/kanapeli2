@@ -10,11 +10,12 @@ class Kana(pygame.sprite.Sprite):
 		self.game = game
 		self.world = self.game.tileMap
 		pygame.sprite.Sprite.__init__(self)
-		self.image_up = pygame.image.load(os.path.join(APP_PATH, "img", "pienet", "kana-up.png"))
-		self.image_down = pygame.image.load(os.path.join(APP_PATH, "img", "pienet", "kana-down.png"))
-		self.image_left = pygame.image.load(os.path.join(APP_PATH, "img", "pienet", "kana-left.png"))
-		self.image_right = pygame.image.load(os.path.join(APP_PATH, "img", "pienet", "kana-right.png"))
-		self.image = self.image_right
+
+		self.image_left = self.loadCharacterTiles("kana-left")
+		self.image_right = self.loadCharacterTiles("kana-right")
+		self.image_down = self.loadCharacterTiles("kana-front")
+		self.image_up = self.loadCharacterTiles("kana-back")
+		self.image = self.image_left
 		self.rect = self.image.get_rect()
 		self.rect.center = [posX, posY]
 		self.location = self.rect.center
@@ -23,6 +24,26 @@ class Kana(pygame.sprite.Sprite):
 		self.lastPos = self.rect.center
 		self.lastMoveTime = time.time()
 		self.speed = 80
+
+	def loadCharacterTiles(self, layerName):
+		images = []
+		wholeCharacter = pygame.Surface(
+			(
+				self.world.tileheight,
+				self.world.tileheight * 2
+			),
+			pygame.SRCALPHA,
+			16
+		)
+		pos = 0
+		for x, y, gid, in self.world.get_layer_by_name(layerName):
+			image = self.world.get_tile_image_by_gid(gid)
+			if image:
+				wholeCharacter.blit(image, (0, pos))
+				images.append(image)
+				pos += self.world.tileheight
+		return wholeCharacter
+
 
 	def hitReaction(self):
 		self.state = "BOUNCING"
