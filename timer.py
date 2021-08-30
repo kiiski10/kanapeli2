@@ -1,8 +1,7 @@
 import time
 
 class TimedAction:
-	def __init__(self, name, interval, action):
-		self.name = name
+	def __init__(self, interval, action):
 		self.action = action
 		self.interval = interval
 		self.lastTick = time.time() * 1000

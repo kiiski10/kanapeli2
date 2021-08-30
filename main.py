@@ -17,6 +17,9 @@ APP_PATH = os.path.dirname(os.path.realpath(__file__)) + os.sep
 
 class Game:
 	def __init__(self):
+		self.RENDER_INTERVAL = 33.34 	# 30fps
+		# self.RENDER_INTERVAL = 16.67 	# 60fps
+		# self.RENDER_INTERVAL = 8.33 	# 120fps
 		self.initTime = time.time() * 1000
 		self.currentFps = 0
 		self.lastRenderTime = time.time() * 1000
@@ -113,8 +116,14 @@ class Game:
 					self.kana.targetQue.append(targettile)
 					self.foods.append(Ruoka(self.tileMap, targettile))
 					self.kana.state = "MOVING"
+				elif event.button == 4:
+					self.RENDER_INTERVAL += 0.1
+					timedActions["RENDER"].interval = self.RENDER_INTERVAL
+				elif event.button == 5:
+					self.RENDER_INTERVAL -= 0.1
+					timedActions["RENDER"].interval = self.RENDER_INTERVAL
 				else:
-					pass
+					print(event.button)
 
 			elif event.type == 1026:			# Mouse button up
 				pass
@@ -188,6 +197,7 @@ class Game:
 
 def updateHUD():
 	game.hud.fields["FPS"].value = game.currentFps
+	game.hud.fields["FPS_LOCK"].value = 1000 / game.RENDER_INTERVAL
 	game.hud.fields["PATH_LEN"].value = len(game.kana.targetQue)
 	game.hud.fields["FOOD"].value = 0
 	game.hud.fields["EGGS"].value = 0
@@ -220,43 +230,36 @@ def renderInOrder():
 	game.hud.render()
 	pygame.display.flip()
 	renderedMsAgo = time.time() * 1000 - game.lastRenderTime
-	game.currentFps = round(1000 / renderedMsAgo)
+	game.currentFps = 1000 / renderedMsAgo
 	game.lastRenderTime = time.time() * 1000
 
 game = Game()
 pygame.event.get()
 pygame.display.set_caption("Kanapeli II v{}".format(VERSION))
-RENDER_INTERVAL = 33.34 	# 30fps
-# RENDER_INTERVAL = 16.67 	# 60fps
-# RENDER_INTERVAL = 8.33 	# 120fps
 
-timedActions = [
-	(
+timedActions = {
+	"EVENT":
 		TimedAction(
-			"handle events",
-			RENDER_INTERVAL,
+			game.RENDER_INTERVAL,
 			game.handleEvents,
 		)
-	),
-	(
+	,
+	"RENDER":
 		TimedAction(
-			"render & flip",
-			RENDER_INTERVAL,
+			game.RENDER_INTERVAL,
 			renderInOrder,
 		)
-	),
-	(
+	,
+	"CONSOLE_LOG":
 		TimedAction(
-			"console log",
 			1000,
 			printStatusLog,
 		)
-	)
-]
+}
 
 while game.running:
 	for a in timedActions:
-		a.activate()
+		timedActions[a].activate()
 
 pygame.quit()
 print("QUIT BYE")
