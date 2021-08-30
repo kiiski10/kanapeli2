@@ -12,14 +12,14 @@ pip install pygame
 pip install pytmx
 """
 
-VERSION = "0.2"
+VERSION = "0.3"
 APP_PATH = os.path.dirname(os.path.realpath(__file__)) + os.sep
 
 class Game:
 	def __init__(self):
-		self.RENDER_INTERVAL = 33.34 	# 30fps
-		# self.RENDER_INTERVAL = 16.67 	# 60fps
-		# self.RENDER_INTERVAL = 8.33 	# 120fps
+		# self.renderInterval = 33.34 	# 30fps
+		self.renderInterval = 16.67 	# 60fps
+		# self.renderInterval = 8.33 	# 120fps
 		self.initTime = time.time() * 1000
 		self.currentFps = 0
 		self.lastRenderTime = time.time() * 1000
@@ -97,15 +97,16 @@ class Game:
 				game.running = False
 
 			elif event.type == 768:				# Key down
-				if event.unicode != "":
-					key = event.unicode
-					if key == "Q":
-						game.running = False
-					else:
-						print("Unhandled key press:", key)
+				if event.unicode == "Q":
+					game.running = False
+				key = {"unicode": event.unicode, "scancode": event.scancode}
+				print("KEY PRESS: unicode: {0:5} scancode: {1}".format(key["unicode"], key["scancode"]))
 
 			elif event.type == 769:				# Key up
 				key = event.unicode
+
+			elif event.type == 771:				# Text input event
+				pass
 
 			elif event.type == 1024:			# Mouse move
 				tilepos = screenPosToTilePos(self.kana, self.tileMap, event.pos)
@@ -116,16 +117,22 @@ class Game:
 					self.kana.targetQue.append(targettile)
 					self.foods.append(Ruoka(self.tileMap, targettile))
 					self.kana.state = "MOVING"
-				elif event.button == 4:
-					self.RENDER_INTERVAL += 0.1
-					timedActions["RENDER"].interval = self.RENDER_INTERVAL
-				elif event.button == 5:
-					self.RENDER_INTERVAL -= 0.1
-					timedActions["RENDER"].interval = self.RENDER_INTERVAL
+				elif event.button == 3:
+					self.renderInterval = 16.66
+					timedActions["RENDER"].interval = self.renderInterval
+				elif event.button == 4 and self.renderInterval > 0:
+					self.renderInterval -= 1
+					timedActions["RENDER"].interval = self.renderInterval
+				elif event.button == 5 and self.renderInterval < 1000:
+					self.renderInterval += 1
+					timedActions["RENDER"].interval = self.renderInterval
 				else:
 					print(event.button)
 
 			elif event.type == 1026:			# Mouse button up
+				pass
+
+			elif event.type == 1027:			# Alternative mouse scroll
 				pass
 
 			else:
@@ -197,7 +204,10 @@ class Game:
 
 def updateHUD():
 	game.hud.fields["FPS"].value = game.currentFps
-	game.hud.fields["FPS_LOCK"].value = 1000 / game.RENDER_INTERVAL
+	try:
+		game.hud.fields["FPS_LOCK"].value = "{:.1f}".format(1000 / game.renderInterval)
+	except ZeroDivisionError:
+		game.hud.fields["FPS_LOCK"].value = "Off"
 	game.hud.fields["PATH_LEN"].value = len(game.kana.targetQue)
 	game.hud.fields["FOOD"].value = 0
 	game.hud.fields["EGGS"].value = 0
@@ -230,7 +240,7 @@ def renderInOrder():
 	game.hud.render()
 	pygame.display.flip()
 	renderedMsAgo = time.time() * 1000 - game.lastRenderTime
-	game.currentFps = 1000 / renderedMsAgo
+	game.currentFps = "{:.1f}".format(1000 / renderedMsAgo)
 	game.lastRenderTime = time.time() * 1000
 
 game = Game()
@@ -240,21 +250,21 @@ pygame.display.set_caption("Kanapeli II v{}".format(VERSION))
 timedActions = {
 	"EVENT":
 		TimedAction(
-			game.RENDER_INTERVAL,
+			game.renderInterval,
 			game.handleEvents,
 		)
 	,
 	"RENDER":
 		TimedAction(
-			game.RENDER_INTERVAL,
+			game.renderInterval,
 			renderInOrder,
 		)
 	,
-	"CONSOLE_LOG":
-		TimedAction(
-			1000,
-			printStatusLog,
-		)
+	# "CONSOLE_LOG":
+	# 	TimedAction(
+	# 		1000,
+	# 		printStatusLog,
+	# 	)
 }
 
 while game.running:

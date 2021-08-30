@@ -20,7 +20,7 @@ class Kana(pygame.sprite.Sprite):
 		self.targetTile = None
 		self.targetQue = []
 		self.lastPos = self.rect.center
-		self.maxSpeed = 2
+		self.maxSpeed = 1.2
 
 	def hitReaction(self):
 		self.state = "BOUNCING"
