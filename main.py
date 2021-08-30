@@ -4,6 +4,7 @@ import psutil
 from kana import Kana
 from timer import TimedAction
 from core import screenPosToTilePos, tilePosToScreenPos, distance
+from ruoka import Ruoka
 
 """
 pip install pygame
@@ -39,6 +40,7 @@ class Game:
 		# pygame.event.set_grab(True)
 		# pygame.mouse.set_visible(False)
 		self.displaySurf = pygame.display.set_mode(self.windowSize, pygame.HWSURFACE | pygame.DOUBLEBUF)# | pygame.FULLSCREEN)
+		self.foods = []
 		self.tileMap = load_pygame(os.path.join(APP_PATH, "maps", "chicken2.tmx"))
 		self.kana = Kana(
 			self.windowSize[0] / 2 + 30,
@@ -58,7 +60,7 @@ class Game:
 		return blockingTiles
 
 	def renderLowTiles(self):
-		drawSeparately = ["korkeat", "esteet"]
+		drawSeparately = ["korkeat", "esteet", "ruoka"]
 		for layer in self.tileMap.visible_layers:
 			if layer.name not in drawSeparately:
 				for x, y, gid, in layer:
@@ -105,9 +107,13 @@ class Game:
 				tilepos = screenPosToTilePos(self.kana, self.tileMap, event.pos)
 
 			elif event.type == 1025:			# Mouse button down
-				targettile = screenPosToTilePos(self.kana, self.tileMap, event.pos)
-				self.kana.targetQue.append(targettile)
-				self.kana.state = "MOVING"
+				if event.button == 1:
+					targettile = screenPosToTilePos(self.kana, self.tileMap, event.pos)
+					self.kana.targetQue.append(targettile)
+					self.foods.append(Ruoka(self.tileMap, targettile))
+					self.kana.state = "MOVING"
+				else:
+					pass
 
 			elif event.type == 1026:			# Mouse button up
 				pass
@@ -115,9 +121,15 @@ class Game:
 			else:
 				print("Unhandled event type:", event)
 
+	def renderFood(self):
+		for f in self.foods:
+			pygame.Surface.blit(self.displaySurf, f.image, tilePosToScreenPos(self.kana, self.tileMap, f.rect.center))
+
+
 	def renderChicken(self):
 		self.kanaSprite.draw(self.displaySurf)
 
+	def renderPath(self):
 		if self.kana.targetTile: 	# Draw line from chicken to target
 			pygame.draw.line(
 				self.displaySurf,
@@ -126,7 +138,6 @@ class Game:
 				tilePosToScreenPos(self.kana, self.tileMap, self.kana.targetTile)
 			)
 
-	def renderPath(self):
 		last_p = None
 		for p in self.kana.targetQue:
 			if last_p:
@@ -149,8 +160,10 @@ class Game:
 		if self.kana.targetTile:
 			if distance(self.kana.lastPos, tilePosToScreenPos(self.kana, self.tileMap, self.kana.targetTile)) < 20:
 				self.kana.targetQue = self.kana.targetQue[1:]
+				self.foods = self.foods[1:]
 				if len(self.kana.targetQue) > 0:
 					self.kana.targetTile = self.kana.targetQue[0]
+
 				else:
 					self.kana.state = "WAITING"
 					self.kana.targetTile = None
@@ -175,11 +188,11 @@ class Game:
 
 
 def printStatusLog():
-	loc = screenPosToTilePos(game.kana, game.tileMap, game.kana.location)
-	print("TME:{0:15} POS:{1}x{2:6} FPS:{3:6} CPU:{4}% LEN:{5}".format(
+	x, y = screenPosToTilePos(game.kana, game.tileMap, game.kana.location)
+	print("TME:{0:15} POS:{1}x{2:6} FPS:{3:6} CPU:{4}% PATH:{5}".format(
 			str(round(time.time() * 1000 - game.initTime)),
-			str(loc[0]),
-			str(loc[1]),
+			str(x),
+			str(y),
 			str(game.currentFps),
 			psutil.cpu_percent(),
 			str(len(game.kana.targetQue))
@@ -192,9 +205,10 @@ def renderInOrder():
 	if game.kana.state == "BLOCKED":
 		game.kana.hitReaction()
 	game.renderLowTiles()
+	game.renderFood()
 	game.renderChicken()
 	game.renderHighTiles()
-	game.renderPath()
+	# game.renderPath()
 	pygame.display.flip()
 	renderedMsAgo = time.time() * 1000 - game.lastRenderTime
 	game.currentFps = round(1000 / renderedMsAgo)
@@ -204,7 +218,7 @@ game = Game()
 pygame.event.get()
 pygame.display.set_caption("Kanapeli II v{}".format(VERSION))
 RENDER_INTERVAL = 33.34 	# 30fps
-#RENDER_INTERVAL = 16.67 	# 60fps
+# RENDER_INTERVAL = 16.67 	# 60fps
 # RENDER_INTERVAL = 8.33 	# 120fps
 
 timedActions = [
