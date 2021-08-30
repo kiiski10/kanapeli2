@@ -1,5 +1,4 @@
 import pygame, os
-APP_PATH = os.path.dirname(os.path.realpath(__file__)) + os.sep
 
 class Ruoka(pygame.sprite.Sprite):
 	def __init__(self, tileMap, pos):

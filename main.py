@@ -4,6 +4,7 @@ import psutil
 from kana import Kana
 from timer import TimedAction
 from core import screenPosToTilePos, tilePosToScreenPos, distance
+from hud import HUD
 from ruoka import Ruoka
 
 """
@@ -32,7 +33,6 @@ class Game:
 		# self.sounds["start-game"].play()
 		pygame.init()
 		pygame.font.init()
-		self.font = pygame.font.SysFont('monotype', 16)
 		self.dt = 0
 		self.clock = pygame.time.Clock()
 		self.running = True
@@ -41,6 +41,7 @@ class Game:
 		# pygame.mouse.set_visible(False)
 		self.displaySurf = pygame.display.set_mode(self.windowSize, pygame.HWSURFACE | pygame.DOUBLEBUF)# | pygame.FULLSCREEN)
 		self.foods = []
+		self.hud = HUD(self, 22)
 		self.tileMap = load_pygame(os.path.join(APP_PATH, "maps", "chicken2.tmx"))
 		self.kana = Kana(
 			self.windowSize[0] / 2 + 30,
@@ -125,7 +126,6 @@ class Game:
 		for f in self.foods:
 			pygame.Surface.blit(self.displaySurf, f.image, tilePosToScreenPos(self.kana, self.tileMap, f.rect.center))
 
-
 	def renderChicken(self):
 		self.kanaSprite.draw(self.displaySurf)
 
@@ -186,6 +186,12 @@ class Game:
 				self.kana.state = "WAITING"
 
 
+def updateHUD():
+	game.hud.fields["FPS"].value = game.currentFps
+	game.hud.fields["PATH_LEN"].value = len(game.kana.targetQue)
+	game.hud.fields["FOOD"].value = 0
+	game.hud.fields["EGGS"].value = 0
+	game.hud.fields["TIME"].value = round((time.time() * 1000 - game.initTime) / 1000)
 
 def printStatusLog():
 	x, y = screenPosToTilePos(game.kana, game.tileMap, game.kana.location)
@@ -210,6 +216,8 @@ def renderInOrder():
 	game.renderChicken()
 	game.renderHighTiles()
 	# game.renderPath()
+	updateHUD()
+	game.hud.render()
 	pygame.display.flip()
 	renderedMsAgo = time.time() * 1000 - game.lastRenderTime
 	game.currentFps = round(1000 / renderedMsAgo)
