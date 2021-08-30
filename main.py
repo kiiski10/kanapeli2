@@ -21,7 +21,9 @@ class Game:
 		self.renderInterval = 16.67 	# 60fps
 		# self.renderInterval = 8.33 	# 120fps
 		self.initTime = time.time() * 1000
+		self.clock = pygame.time.Clock()
 		self.currentFps = 0
+		self.fpsLock = 60
 		self.lastRenderTime = time.time() * 1000
 		pygame.mixer.pre_init(44100, -16, 1, 1024)		# Shorten the buffer (last parameter) to reduce sound latency
 		pygame.mixer.init()
@@ -49,7 +51,7 @@ class Game:
 		self.kana = Kana(
 			self.windowSize[0] / 2 + 30,
 			self.windowSize[1] / 2,
-			self.tileMap,
+			self,
 		)
 		self.sprites = pygame.sprite.Group()
 		self.kanaSprite = pygame.sprite.Group()
@@ -115,19 +117,18 @@ class Game:
 				if event.button == 1:
 					targettile = screenPosToTilePos(self.kana, self.tileMap, event.pos)
 					self.kana.targetQue.append(targettile)
+					self.kana.lastMoveTime = time.time()
 					self.foods.append(Ruoka(self.tileMap, targettile))
 					self.kana.state = "MOVING"
+
 				elif event.button == 3:
-					self.renderInterval = 16.66
-					timedActions["RENDER"].interval = self.renderInterval
-				elif event.button == 4 and self.renderInterval > 0:
-					self.renderInterval -= 1
-					timedActions["RENDER"].interval = self.renderInterval
-				elif event.button == 5 and self.renderInterval < 1000:
-					self.renderInterval += 1
-					timedActions["RENDER"].interval = self.renderInterval
+					self.fpsLock = 60
+				elif event.button == 4 and self.fpsLock < 345:
+					self.fpsLock += 5
+				elif event.button == 5 and self.fpsLock > 5:
+					self.fpsLock -= 5
 				else:
-					print(event.button)
+					pass
 
 			elif event.type == 1026:			# Mouse button up
 				pass
@@ -204,10 +205,7 @@ class Game:
 
 def updateHUD():
 	game.hud.fields["FPS"].value = game.currentFps
-	try:
-		game.hud.fields["FPS_LOCK"].value = "{:.1f}".format(1000 / game.renderInterval)
-	except ZeroDivisionError:
-		game.hud.fields["FPS_LOCK"].value = "Off"
+	game.hud.fields["FPS_LOCK"].value = game.fpsLock
 	game.hud.fields["PATH_LEN"].value = len(game.kana.targetQue)
 	game.hud.fields["FOOD"].value = 0
 	game.hud.fields["EGGS"].value = 0
@@ -248,18 +246,6 @@ pygame.event.get()
 pygame.display.set_caption("Kanapeli II v{}".format(VERSION))
 
 timedActions = {
-	"EVENT":
-		TimedAction(
-			game.renderInterval,
-			game.handleEvents,
-		)
-	,
-	"RENDER":
-		TimedAction(
-			game.renderInterval,
-			renderInOrder,
-		)
-	,
 	# "CONSOLE_LOG":
 	# 	TimedAction(
 	# 		1000,
@@ -268,8 +254,13 @@ timedActions = {
 }
 
 while game.running:
+	game.handleEvents()
+	renderInOrder()
+
 	for a in timedActions:
 		timedActions[a].activate()
+
+	game.clock.tick(game.fpsLock)
 
 pygame.quit()
 print("QUIT BYE")

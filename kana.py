@@ -1,13 +1,14 @@
-import pygame, os, math
+import pygame, os, math, time
 from core import screenPosToTilePos, tilePosToScreenPos
 
 APP_PATH = os.path.dirname(os.path.realpath(__file__))
 
 class Kana(pygame.sprite.Sprite):
-	def __init__(self, posX, posY, tileMap):
+	def __init__(self, posX, posY, game):
 		self.state = "LOADING"
 		self.munat = []
-		self.world = tileMap
+		self.game = game
+		self.world = self.game.tileMap
 		pygame.sprite.Sprite.__init__(self)
 		self.image_up = pygame.image.load(os.path.join(APP_PATH, "img", "pienet", "kana-up.png"))
 		self.image_down = pygame.image.load(os.path.join(APP_PATH, "img", "pienet", "kana-down.png"))
@@ -20,7 +21,8 @@ class Kana(pygame.sprite.Sprite):
 		self.targetTile = None
 		self.targetQue = []
 		self.lastPos = self.rect.center
-		self.maxSpeed = 1.2
+		self.lastMoveTime = time.time()
+		self.speed = 80
 
 	def hitReaction(self):
 		self.state = "BOUNCING"
@@ -29,16 +31,16 @@ class Kana(pygame.sprite.Sprite):
 		movement.from_polar((10, angle - 195))
 		movement.x = int(movement.x)
 		movement.y = int(movement.y)
+		self.lastMoveTime = time.time()
 		self.targetPos = movement + self.location
 
 	def move(self, distance, degrees):
 		movement = pygame.math.Vector2()
-		if self.state == "BOUNCING":
-			if distance > self.maxSpeed * 3:
-				distance = self.maxSpeed * 3
-		else:
-			if distance > self.maxSpeed:
-				distance = self.maxSpeed
+
+		now = time.time()
+		dt = now - self.lastMoveTime
+		self.lastMoveTime = time.time()
+		distance = self.speed * dt
 
 		movement.from_polar((distance, degrees))
 		self.location += movement
