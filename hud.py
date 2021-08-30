@@ -16,6 +16,7 @@ class HUD():
 		self.fields = {
 			"TIME": Field("Time", self),
 			"FPS": Field("Fps", self),
+			"CPU_PERCENT": Field("Cpu usage", self),
 			"FPS_LOCK": Field("Fps lock", self),
 			"PATH_LEN": Field("Path length", self),
 			"FOOD": Field("Food", self),

@@ -21,6 +21,7 @@ class Game:
 		self.renderInterval = 16.67 	# 60fps
 		# self.renderInterval = 8.33 	# 120fps
 		self.initTime = time.time() * 1000
+		self.currentProcess = psutil.Process()
 		self.clock = pygame.time.Clock()
 		self.currentFps = 0
 		self.fpsLock = 60
@@ -212,12 +213,14 @@ def updateHUD():
 
 def printStatusLog():
 	x, y = screenPosToTilePos(game.kana, game.tileMap, game.kana.location)
+	print("{}%".format(game.currentProcess.cpu_percent()))
+
 	print("TME:{0:15} POS:{1}x{2:6} FPS:{3:6} CPU:{4}%{6:4} PATH:{5}".format(
 			str(round(time.time() * 1000 - game.initTime)),
 			str(round(x)),
 			str(round(y)),
 			str(game.currentFps),
-			psutil.cpu_percent(),
+			game.currentProcess.cpu_percent(),
 			str(len(game.kana.targetQue)),
 			""
 		)
@@ -225,6 +228,9 @@ def printStatusLog():
 
 def updateHudFps():
 	game.hud.fields["FPS"].value = game.currentFps
+
+def updateHudCpuUsage():
+	game.hud.fields["CPU_PERCENT"].value = "{:.0f}%".format(game.currentProcess.cpu_percent())
 
 def updateWindowTitle():
 	pygame.display.set_caption("Kanapeli II v{} State: {}".format(VERSION, game.kana.state))
@@ -254,6 +260,11 @@ timedActions = {
 			500,
 			updateHudFps,
 		),
+	"UPDATE_CPU_USAGE":
+		TimedAction(
+			1000,
+			updateHudCpuUsage,
+		),
 	"UPDATE_HUD":
 		TimedAction(
 			150,
@@ -264,11 +275,11 @@ timedActions = {
 			250,
 			updateWindowTitle,
 		),
-	# "CONSOLE_LOG":
-	# 	TimedAction(
-	# 		1000,
-	# 		printStatusLog,
-	# 	)
+	"CONSOLE_LOG":
+		TimedAction(
+			1000,
+			printStatusLog,
+		)
 }
 
 while game.running:
