@@ -189,13 +189,14 @@ class Game:
 
 def printStatusLog():
 	x, y = screenPosToTilePos(game.kana, game.tileMap, game.kana.location)
-	print("TME:{0:15} POS:{1}x{2:6} FPS:{3:6} CPU:{4}% PATH:{5}".format(
+	print("TME:{0:15} POS:{1}x{2:6} FPS:{3:6} CPU:{4}%{6:4} PATH:{5}".format(
 			str(round(time.time() * 1000 - game.initTime)),
-			str(x),
-			str(y),
+			str(round(x)),
+			str(round(y)),
 			str(game.currentFps),
 			psutil.cpu_percent(),
-			str(len(game.kana.targetQue))
+			str(len(game.kana.targetQue)),
+			""
 		)
 	)
 
