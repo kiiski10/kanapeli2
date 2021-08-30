@@ -20,11 +20,11 @@ class Game:
 		# self.renderInterval = 33.34 	# 30fps
 		self.renderInterval = 16.67 	# 60fps
 		# self.renderInterval = 8.33 	# 120fps
-		self.initTime = time.time() * 1000
 		self.currentProcess = psutil.Process()
+		self.initTime = time.time() * 1000
 		self.clock = pygame.time.Clock()
 		self.currentFps = 0
-		self.fpsLock = 60
+		self.fpsLock = 45
 		self.lastRenderTime = time.time() * 1000
 		pygame.mixer.pre_init(44100, -16, 1, 1024)		# Shorten the buffer (last parameter) to reduce sound latency
 		pygame.mixer.init()
@@ -63,11 +63,11 @@ class Game:
 		blockingTiles = []
 		for x, y, gid, in self.tileMap.get_layer_by_name("esteet"):
 			if gid:
-				blockingTiles.append((x, y))
+				blockingTiles.append((x + 1, y + 1))
 		return blockingTiles
 
 	def renderLowTiles(self):
-		drawSeparately = ["korkeat", "esteet", "ruoka"]
+		drawSeparately = ["korkeat", "ruoka"]
 		for layer in self.tileMap.visible_layers:
 			if layer.name not in drawSeparately:
 				for x, y, gid, in layer:
@@ -112,14 +112,15 @@ class Game:
 				pass
 
 			elif event.type == 1024:			# Mouse move
-				tilepos = screenPosToTilePos(self.kana, self.tileMap, event.pos)
+				# tilepos = screenPosToTilePos(self.kana, self.tileMap, event.pos)
+				pass
 
 			elif event.type == 1025:			# Mouse button down
 				if event.button == 1:
-					targettile = screenPosToTilePos(self.kana, self.tileMap, event.pos)
-					self.kana.targetQue.append(targettile)
+					pos = screenPosToTilePos(self.kana, self.tileMap, event.pos)
+					self.kana.targetQue.append(pos)
 					self.kana.lastMoveTime = time.time()
-					self.foods.append(Ruoka(self.tileMap, targettile))
+					self.foods.append(Ruoka(self.tileMap, pos))
 					self.kana.state = "MOVING"
 
 				elif event.button == 3:
@@ -144,16 +145,32 @@ class Game:
 		for f in self.foods:
 			pygame.Surface.blit(self.displaySurf, f.image, tilePosToScreenPos(self.kana, self.tileMap, f.rect.center))
 
+	def renderTileHilight(self):
+		x1, y1 = screenPosToTilePos(self.kana, self.tileMap, pygame.mouse.get_pos())
+		x, y = tilePosToScreenPos(self.kana, self.tileMap, (x1,y1))
+		h = game.tileMap.tileheight
+
+		color = (255,255,255)
+		if (x1,y1) in self.blockingTiles:
+			color = (240,30,20)
+
+		pygame.draw.rect(self.displaySurf, (color), (x, y, h, h), 1)
+
 	def renderChicken(self):
 		self.kanaSprite.draw(self.displaySurf)
 
 	def renderPath(self):
 		if self.kana.targetTile: 	# Draw line from chicken to target
+			pos = tilePosToScreenPos(self.kana, self.tileMap, self.kana.targetTile)
+			pos = (
+				pos[0] + self.tileMap.tileheight / 2,
+				pos[1] + self.tileMap.tileheight / 2
+			)
 			pygame.draw.line(
 				self.displaySurf,
 				(130,25,120),
 				self.kana.location,
-				tilePosToScreenPos(self.kana, self.tileMap, self.kana.targetTile)
+				pos
 			)
 
 		last_p = None
@@ -194,6 +211,7 @@ class Game:
 
 				if kanaTilePos in self.blockingTiles:
 					self.kana.location = self.kana.lastPos
+					print(kanaTilePos)
 					self.kana.state = "BLOCKED"
 				else:
 					self.kana.lastPos = self.kana.rect.center
@@ -213,16 +231,13 @@ def updateHUD():
 
 def printStatusLog():
 	x, y = screenPosToTilePos(game.kana, game.tileMap, game.kana.location)
-	print("{}%".format(game.currentProcess.cpu_percent()))
-
-	print("TME:{0:15} POS:{1}x{2:6} FPS:{3:6} CPU:{4}%{6:4} PATH:{5}".format(
+	print("TME:{0:15} POS:{1}x{2:6} FPS:{3:6} CPU:{4:6} PATH:{5}".format(
 			str(round(time.time() * 1000 - game.initTime)),
 			str(round(x)),
 			str(round(y)),
 			str(game.currentFps),
-			game.currentProcess.cpu_percent(),
-			str(len(game.kana.targetQue)),
-			""
+			game.hud.fields["CPU_PERCENT"].value,
+			str(len(game.kana.targetQue))
 		)
 	)
 
@@ -239,8 +254,10 @@ def renderFrame():
 	game.moveChicken()
 	if game.kana.state == "BLOCKED":
 		game.kana.hitReaction()
+	game.displaySurf.fill((0,0,0))
 	game.renderLowTiles()
 	game.renderFood()
+	game.renderTileHilight()
 	game.renderChicken()
 	game.renderHighTiles()
 	# game.renderPath()
@@ -275,11 +292,11 @@ timedActions = {
 			250,
 			updateWindowTitle,
 		),
-	"CONSOLE_LOG":
-		TimedAction(
-			1000,
-			printStatusLog,
-		)
+	# "CONSOLE_LOG":
+	# 	TimedAction(
+	# 		1000,
+	# 		printStatusLog,
+	# 	)
 }
 
 while game.running:

@@ -26,7 +26,6 @@ class Kana(pygame.sprite.Sprite):
 		self.speed = 80
 
 	def loadCharacterTiles(self, layerName):
-		images = []
 		wholeCharacter = pygame.Surface(
 			(
 				self.world.tileheight,
@@ -40,7 +39,6 @@ class Kana(pygame.sprite.Sprite):
 			image = self.world.get_tile_image_by_gid(gid)
 			if image:
 				wholeCharacter.blit(image, (0, pos))
-				images.append(image)
 				pos += self.world.tileheight
 		return wholeCharacter
 
@@ -49,11 +47,14 @@ class Kana(pygame.sprite.Sprite):
 		self.state = "BOUNCING"
 		angle = self.coordsToDistAngle(self.rect.center)[1]
 		movement = pygame.math.Vector2()
-		movement.from_polar((10, angle - 195))
+		movement.from_polar((25, angle - 195))
 		movement.x = int(movement.x)
 		movement.y = int(movement.y)
 		self.lastMoveTime = time.time()
-		self.targetPos = movement + self.location
+		self.location = movement + self.location
+		self.targetQue = []
+		self.targetTile = None
+
 
 	def move(self, distance, degrees):
 		movement = pygame.math.Vector2()
