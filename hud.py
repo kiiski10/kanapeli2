@@ -30,5 +30,3 @@ class HUD():
 			self.game.displaySurf.blit(self.textSurface, (10, y))
 			y += self.fields[f].rowHeight
 
-		#pygame.draw.line
-

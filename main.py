@@ -46,14 +46,16 @@ class Game:
 		# pygame.event.set_grab(True)
 		# pygame.mouse.set_visible(False)
 		self.displaySurf = pygame.display.set_mode(self.windowSize, pygame.HWSURFACE | pygame.DOUBLEBUF)# | pygame.FULLSCREEN)
+		#pygame.display.set_mode(pygame.display.list_modes()[0]) # Change resolution
 		self.foods = []
 		self.hud = HUD(self, 22)
 		self.tileMap = load_pygame(os.path.join(APP_PATH, "maps", "chicken2.tmx"))
 		self.kana = Kana(
-			self.windowSize[0] / 2 + 30,
-			self.windowSize[1] / 2,
+			(self.tileMap.width / 2) * 24,
+			(self.tileMap.height / 2) * 24,
 			self,
 		)
+		# print(self.kana.location)
 		self.sprites = pygame.sprite.Group()
 		self.kanaSprite = pygame.sprite.Group()
 		self.kanaSprite.add(self.kana)
@@ -143,7 +145,11 @@ class Game:
 
 	def renderFood(self):
 		for f in self.foods:
-			pygame.Surface.blit(self.displaySurf, f.image, tilePosToScreenPos(self.kana, self.tileMap, f.rect.center))
+			pygame.Surface.blit(
+				self.displaySurf,
+				f.image,
+				tilePosToScreenPos(self.kana, self.tileMap, f.rect.center)
+			)
 
 	def renderTileHilight(self):
 		x1, y1 = screenPosToTilePos(self.kana, self.tileMap, pygame.mouse.get_pos())
@@ -162,10 +168,6 @@ class Game:
 	def renderPath(self):
 		if self.kana.targetTile: 	# Draw line from chicken to target
 			pos = tilePosToScreenPos(self.kana, self.tileMap, self.kana.targetTile)
-			pos = (
-				pos[0] + self.tileMap.tileheight / 2,
-				pos[1] + self.tileMap.tileheight / 2
-			)
 			pygame.draw.line(
 				self.displaySurf,
 				(130,25,120),
@@ -211,7 +213,6 @@ class Game:
 
 				if kanaTilePos in self.blockingTiles:
 					self.kana.location = self.kana.lastPos
-					print(kanaTilePos)
 					self.kana.state = "BLOCKED"
 				else:
 					self.kana.lastPos = self.kana.rect.center
